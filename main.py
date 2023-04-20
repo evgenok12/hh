@@ -27,7 +27,7 @@ def predict_rub_salary_sj(vacancy):
 
 def predict_rub_salary_hh(vacancy):
     salary = vacancy['salary']
-    if salary and salary['currency'] != 'RUR':
+    if not salary or salary['currency'] != 'RUR':
         return None
     if salary['from'] and salary['to']:
         return (salary['from'] + salary['to']) / 2
@@ -72,7 +72,7 @@ def get_vacancies_summary_hh(languages):
         print(f'{language} скачан', end='\n\n')
 
     for language, vacancies in all_vacancies.items():
-        salaries = tuple(filter(lambda x: x is not None, [predict_rub_salary_hh(vacancy) for vacancy in vacancies['items']]))      
+        salaries = tuple(filter(lambda x: x, [predict_rub_salary_hh(vacancy) for vacancy in vacancies['items']]))      
         if not salaries:
             continue
         vacancies_summary[language] = {
@@ -122,7 +122,7 @@ def get_vacancies_summary_sj(languages, token):
         print(f'{language} скачан', end='\n\n')
     
     for language, vacancies in all_vacancies.items():
-        salaries = tuple(filter(lambda x: x is not None, [predict_rub_salary_sj(vacancy) for vacancy in vacancies['objects']]))      
+        salaries = tuple(filter(lambda x: x, [predict_rub_salary_sj(vacancy) for vacancy in vacancies['objects']]))      
         if not salaries:
             continue
         vacancies_summary[language] = {
@@ -145,8 +145,7 @@ def main():
     env.read_env()
     superjob_token = env('SUPERJOB_TOKEN')
     languages = (
-        'Python', 'C++', 'Java', 'C#', 'JavaScript', 'PHP', 'Swift', 'Go',
-        'Scala', 'TypeScript', 'Kotlin', 'Rust', 'Ruby', 'Delphi', '1С'
+        'Python', 'C++', 'Ruby', 'Delphi', '1С'
         )
     print('Скачиваем вакансии с hh')
     vacancies_summary_hh = get_vacancies_summary_hh(languages)
