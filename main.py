@@ -68,7 +68,7 @@ def get_vacancies_summary_hh(languages):
             page_payload = response.json()
             all_vacancies[language]['items'].extend(page_payload['items'])
             print(f"Страница {params['page'] + 1}/{pages_number} скачана")
-            params['page'] = params.get('page') + 1
+            params['page'] += 1
         print(f'{language} скачан', end='\n\n')
 
     for language, vacancies in all_vacancies.items():
@@ -118,7 +118,7 @@ def get_vacancies_summary_sj(languages, token):
             print(f"Страница {params['page'] + 1}/{pages_number} скачана")
             if not payload['more']:
                 break
-            params['page'] = params.get('page') + 1
+            params['page'] += 1
         print(f'{language} скачан', end='\n\n')
     
     for language, vacancies in all_vacancies.items():
