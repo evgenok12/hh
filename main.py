@@ -102,7 +102,7 @@ def get_vacancies_summary_sj(languages, token):
         response.raise_for_status()
         payload = response.json()
         
-        if payload['total'] <= 0:
+        if not payload['total']:
             continue
         print(language)
         all_vacancies[language]['total'] = payload['total']
