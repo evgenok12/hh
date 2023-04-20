@@ -156,7 +156,8 @@ def main():
     env.read_env()
     superjob_token = env('SUPERJOB_TOKEN')
     languages = (
-        'C++', 
+        'Python', 'C++', 'Java', 'C#', 'JavaScript', 'PHP', 'Swift', 'Go',
+        'Scala', 'TypeScript', 'Kotlin', 'Rust', 'Ruby', 'Delphi', '1С'
         )
     print('Скачиваем вакансии с hh')
     vacancies_summary_hh = get_vacancies_summary_hh(languages)
