@@ -6,6 +6,14 @@ from terminaltables import AsciiTable
 from environs import Env
 
 
+HH_ROLE_ID = 96
+SJ_ROLE_ID = 48
+HH_TOWN_ID = 1
+SJ_TOWN_ID = 4
+VACANCIES_PER_PAGE = 100
+FIRST_PAGE_NUMBER = 0
+
+
 def predict_rub_salary_sj(vacancy):
     if vacancy['currency'] == 'rub':
         if vacancy['payment_from'] and vacancy['payment_to']:
@@ -35,10 +43,10 @@ def get_vacancies_summary_hh(languages):
     for language in languages:
         params = {
             'text': language,
-            'professional_role': 96,
-            'area': 1,
-            'per_page': 100,
-            'page': 0,
+            'professional_role': HH_ROLE_ID,
+            'area': HH_TOWN_ID,
+            'per_page': VACANCIES_PER_PAGE,
+            'page': FIRST_PAGE_NUMBER,
         }
         response = requests.get(url, params)
         response.raise_for_status()
@@ -81,10 +89,10 @@ def get_vacancies_summary_sj(languages, token):
     for language in languages:
         params = {
             'keyword': language,
-            'catalogues': 48,
-            'town': 4,
-            'count': 100,
-            'page': 0,
+            'catalogues': SJ_ROLE_ID,
+            'town': SJ_TOWN_ID,
+            'count': VACANCIES_PER_PAGE,
+            'page': FIRST_PAGE_NUMBER,
         }
         response = requests.get(url, params=params, headers=headers)
         response.raise_for_status()
