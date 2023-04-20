@@ -15,24 +15,26 @@ FIRST_PAGE_NUMBER = 0
 
 
 def predict_rub_salary_sj(vacancy):
-    if vacancy['currency'] == 'rub':
-        if vacancy['payment_from'] and vacancy['payment_to']:
-            return (vacancy['payment_from'] + vacancy['payment_to']) / 2
-        if vacancy['payment_from']:
-            return vacancy['payment_from'] * 1.2
-        if vacancy['payment_to']:
-            return vacancy['payment_to'] * 0.8 
+    if vacancy['currency'] != 'rub':
+        return None
+    if vacancy['payment_from'] and vacancy['payment_to']:
+        return (vacancy['payment_from'] + vacancy['payment_to']) / 2
+    if vacancy['payment_from']:
+        return vacancy['payment_from'] * 1.2
+    if vacancy['payment_to']:
+        return vacancy['payment_to'] * 0.8 
 
 
 def predict_rub_salary_hh(vacancy):
     salary = vacancy['salary']
-    if salary and salary['currency'] == 'RUR':
-        if salary['from'] and salary['to']:
-            return (salary['from'] + salary['to']) / 2
-        if salary['from']:
-            return salary['from'] * 1.2
-        if salary['to']:
-            return salary['to'] * 0.8 
+    if salary and salary['currency'] != 'RUR':
+        return None
+    if salary['from'] and salary['to']:
+        return (salary['from'] + salary['to']) / 2
+    if salary['from']:
+        return salary['from'] * 1.2
+    if salary['to']:
+        return salary['to'] * 0.8 
         
 
 def get_vacancies_summary_hh(languages):
@@ -52,30 +54,32 @@ def get_vacancies_summary_hh(languages):
         response.raise_for_status()
         payload = response.json()
         
-        if payload['found'] > 100:
-            print(language)
-            all_vacancies[language]['found'] = payload['found']
-            all_vacancies[language]['items'] = []
-            pages_number = payload['pages']
-            print(f'Количество страниц: {pages_number}')
+        if payload['found'] <= 100:
+            continue
+        print(language)
+        all_vacancies[language]['found'] = payload['found']
+        all_vacancies[language]['items'] = []
+        pages_number = payload['pages']
+        print(f'Количество страниц: {pages_number}')
 
-            while params['page'] < pages_number:
-                page_response = requests.get(url, params)
-                page_response.raise_for_status()
-                page_payload = response.json()
-                all_vacancies[language]['items'].extend(page_payload['items'])
-                print(f"Страница {params['page'] + 1}/{pages_number} скачана")
-                params['page'] = params.get('page') + 1
-            print(f'{language} скачан', end='\n\n')
+        while params['page'] < pages_number:
+            page_response = requests.get(url, params)
+            page_response.raise_for_status()
+            page_payload = response.json()
+            all_vacancies[language]['items'].extend(page_payload['items'])
+            print(f"Страница {params['page'] + 1}/{pages_number} скачана")
+            params['page'] = params.get('page') + 1
+        print(f'{language} скачан', end='\n\n')
 
     for language, vacancies in all_vacancies.items():
         salaries = tuple(filter(lambda x: x is not None, [predict_rub_salary_hh(vacancy) for vacancy in vacancies['items']]))      
-        if salaries:
-            vacancies_summary[language] = {
-                'vacancies_found': vacancies['found'],
-                'vacancies_processed': len(salaries),
-                'average_salary': int(sum(salaries) / len(salaries)),
-            }
+        if not salaries:
+            continue
+        vacancies_summary[language] = {
+            'vacancies_found': vacancies['found'],
+            'vacancies_processed': len(salaries),
+            'average_salary': int(sum(salaries) / len(salaries)),
+        }
 
     return vacancies_summary
 
@@ -98,32 +102,34 @@ def get_vacancies_summary_sj(languages, token):
         response.raise_for_status()
         payload = response.json()
         
-        if payload['total'] > 0:
-            print(language)
-            all_vacancies[language]['total'] = payload['total']
-            all_vacancies[language]['objects'] = []
-            pages_number = math.ceil(payload['total'] / params['count'])
-            print(f'Количество страниц: {pages_number}')
+        if payload['total'] <= 0:
+            continue
+        print(language)
+        all_vacancies[language]['total'] = payload['total']
+        all_vacancies[language]['objects'] = []
+        pages_number = math.ceil(payload['total'] / params['count'])
+        print(f'Количество страниц: {pages_number}')
 
-            for _ in count(0):
-                response = requests.get(url, params=params, headers=headers)
-                response.raise_for_status()
-                payload = response.json()
-                all_vacancies[language]['objects'].extend(payload['objects'])
-                print(f"Страница {params['page'] + 1}/{pages_number} скачана")
-                if not payload['more']:
-                    break
-                params['page'] = params.get('page') + 1
-            print(f'{language} скачан', end='\n\n')
+        for _ in count(0):
+            response = requests.get(url, params=params, headers=headers)
+            response.raise_for_status()
+            payload = response.json()
+            all_vacancies[language]['objects'].extend(payload['objects'])
+            print(f"Страница {params['page'] + 1}/{pages_number} скачана")
+            if not payload['more']:
+                break
+            params['page'] = params.get('page') + 1
+        print(f'{language} скачан', end='\n\n')
     
     for language, vacancies in all_vacancies.items():
         salaries = tuple(filter(lambda x: x is not None, [predict_rub_salary_sj(vacancy) for vacancy in vacancies['objects']]))      
-        if salaries:
-            vacancies_summary[language] = {
-                'vacancies_found': vacancies['total'],
-                'vacancies_processed': len(salaries),
-                'average_salary': int(sum(salaries) / len(salaries)),
-            }
+        if not salaries:
+            continue
+        vacancies_summary[language] = {
+            'vacancies_found': vacancies['total'],
+            'vacancies_processed': len(salaries),
+            'average_salary': int(sum(salaries) / len(salaries)),
+        }
 
     return vacancies_summary
 
