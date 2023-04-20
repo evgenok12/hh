@@ -62,13 +62,16 @@ def get_vacancies_summary_hh(languages):
         pages_number = payload['pages']
         print(f'Количество страниц: {pages_number}')
 
-        while params['page'] < pages_number:
-            page_response = requests.get(url, params)
-            page_response.raise_for_status()
-            page_payload = response.json()
-            all_vacancies[language]['items'].extend(page_payload['items'])
+        for _ in count(0):     
+            all_vacancies[language]['items'] += payload['items']
             print(f"Страница {params['page'] + 1}/{pages_number} скачана")
+            if params['page'] == pages_number - 1:
+                break
             params['page'] += 1
+            response = requests.get(url, params)
+            response.raise_for_status()
+            payload = response.json()
+
         print(f'{language} скачан', end='\n\n')
 
     for language, vacancies in all_vacancies.items():
@@ -111,14 +114,15 @@ def get_vacancies_summary_sj(languages, token):
         print(f'Количество страниц: {pages_number}')
 
         for _ in count(0):
-            response = requests.get(url, params=params, headers=headers)
-            response.raise_for_status()
-            payload = response.json()
-            all_vacancies[language]['objects'].extend(payload['objects'])
+            all_vacancies[language]['objects'] += payload['objects']
             print(f"Страница {params['page'] + 1}/{pages_number} скачана")
             if not payload['more']:
                 break
             params['page'] += 1
+            response = requests.get(url, params=params, headers=headers)
+            response.raise_for_status()
+            payload = response.json()  
+
         print(f'{language} скачан', end='\n\n')
     
     for language, vacancies in all_vacancies.items():
@@ -145,7 +149,7 @@ def main():
     env.read_env()
     superjob_token = env('SUPERJOB_TOKEN')
     languages = (
-        'Python', 'C++', 'Ruby', 'Delphi', '1С'
+        'C++', 
         )
     print('Скачиваем вакансии с hh')
     vacancies_summary_hh = get_vacancies_summary_hh(languages)
