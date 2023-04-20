@@ -14,28 +14,25 @@ VACANCIES_PER_PAGE = 100
 FIRST_PAGE_NUMBER = 0
 
 
-def predict_rub_salary_sj(vacancy):
-    if vacancy['currency'] != 'rub':
-        return None
-    if vacancy['payment_from'] and vacancy['payment_to']:
-        return (vacancy['payment_from'] + vacancy['payment_to']) / 2
-    if vacancy['payment_from']:
-        return vacancy['payment_from'] * 1.2
-    if vacancy['payment_to']:
-        return vacancy['payment_to'] * 0.8 
+def predict_rub_salary(vacancy, is_hh):
+    if is_hh:
+        is_correct_currency = vacancy['salary']['currency'] == 'RUR'
+        salary_from = vacancy['salary']['from']
+        salary_to = vacancy['salary']['to']
+    else:
+        is_correct_currency = vacancy['currency'] == 'rub'
+        salary_from = vacancy['payment_from']
+        salary_to = vacancy['payment_to']
 
-
-def predict_rub_salary_hh(vacancy):
-    salary = vacancy['salary']
-    if not salary or salary['currency'] != 'RUR':
+    if not is_correct_currency:
         return None
-    if salary['from'] and salary['to']:
-        return (salary['from'] + salary['to']) / 2
-    if salary['from']:
-        return salary['from'] * 1.2
-    if salary['to']:
-        return salary['to'] * 0.8 
-        
+    if salary_from and salary_to:
+        return (salary_from + salary_to) / 2
+    if salary_from:
+        return salary_from * 1.2
+    if salary_to:
+        return salary_to * 0.8 
+
 
 def get_vacancies_summary_hh(languages):
     url = 'https://api.hh.ru/vacancies/'
@@ -75,7 +72,10 @@ def get_vacancies_summary_hh(languages):
         print(f'{language} скачан', end='\n\n')
 
     for language, vacancies in all_vacancies.items():
-        salaries = tuple(filter(lambda x: x, [predict_rub_salary_hh(vacancy) for vacancy in vacancies['items']]))      
+        salaries = tuple(filter(lambda x: x,
+        [predict_rub_salary(vacancy, True) for vacancy in vacancies['items']if vacancy['salary']]
+        ))
+
         if not salaries:
             continue
         vacancies_summary[language] = {
@@ -126,7 +126,10 @@ def get_vacancies_summary_sj(languages, token):
         print(f'{language} скачан', end='\n\n')
     
     for language, vacancies in all_vacancies.items():
-        salaries = tuple(filter(lambda x: x, [predict_rub_salary_sj(vacancy) for vacancy in vacancies['objects']]))      
+        salaries = tuple(filter(lambda x: x, 
+        [predict_rub_salary(vacancy, False) for vacancy in vacancies['objects']]
+        ))      
+
         if not salaries:
             continue
         vacancies_summary[language] = {
@@ -139,8 +142,12 @@ def get_vacancies_summary_sj(languages, token):
 
 
 def create_table(vacancies_summary, title):
-    table_data = [['Язык программирования', 'Вакансий найдено', 'Вакансий обработано', 'Средняя зарплата']]
-    table_data.extend([language, *summary.values()] for language, summary in vacancies_summary.items())
+    table_data = [
+        ['Язык программирования', 'Вакансий найдено', 'Вакансий обработано', 'Средняя зарплата']
+        ]
+    table_data.extend(
+        [language, *summary.values()] for language, summary in vacancies_summary.items()
+        )
     return AsciiTable(table_data, title).table
 
 
