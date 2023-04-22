@@ -143,13 +143,13 @@ def get_vacancies_summary_sj(languages, token):
 
 
 def create_table(vacancies_summary, title):
-    table_data = [
+    table = [
         ['Язык программирования', 'Вакансий найдено', 'Вакансий обработано', 'Средняя зарплата']
         ]
-    table_data.extend(
+    table.extend(
         [language, *summary.values()] for language, summary in vacancies_summary.items()
         )
-    return AsciiTable(table_data, title).table
+    return AsciiTable(table, title).table
 
 
 def main():
