@@ -12,6 +12,7 @@ HH_TOWN_ID = 1
 SJ_TOWN_ID = 4
 VACANCIES_PER_PAGE = 100
 FIRST_PAGE_NUMBER = 0
+HH_MIN_VACANTIONS_NUMBER = 100
 
 
 def predict_rub_salary(vacancy, is_hh):
@@ -51,7 +52,7 @@ def get_vacancies_summary_hh(languages):
         response.raise_for_status()
         payload = response.json()
         
-        if payload['found'] <= 100:
+        if payload['found'] <= HH_MIN_VACANTIONS_NUMBER:
             continue
         print(language)
         all_vacancies[language]['found'] = payload['found']
