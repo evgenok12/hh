@@ -15,18 +15,19 @@ FIRST_PAGE_NUMBER = 0
 HH_MIN_VACANTIONS_NUMBER = 100
 
 
-def predict_rub_salary(vacancy, is_hh):
-    if is_hh:
-        is_correct_currency = vacancy['salary']['currency'] == 'RUR'
-        salary_from = vacancy['salary']['from']
-        salary_to = vacancy['salary']['to']
-    else:
-        is_correct_currency = vacancy['currency'] == 'rub'
-        salary_from = vacancy['payment_from']
-        salary_to = vacancy['payment_to']
-
-    if not is_correct_currency:
+def predict_rub_salary_hh(vacancy):
+    if vacancy['salary']['currency'] != 'RUR':
         return None
+    return predict_rub_salary(vacancy['salary']['from'], vacancy['salary']['to'])
+
+
+def predict_rub_salary_sj(vacancy):
+    if vacancy['currency'] != 'rub':
+        return None
+    return predict_rub_salary(vacancy['payment_from'], vacancy['payment_to']) 
+
+
+def predict_rub_salary(salary_from, salary_to):
     if salary_from and salary_to:
         return (salary_from + salary_to) / 2
     if salary_from:
@@ -74,7 +75,7 @@ def get_vacancies_summary_hh(languages):
 
     for language, vacancies in all_vacancies.items():
         salaries = tuple(filter(lambda x: x,
-        [predict_rub_salary(vacancy, True) for vacancy in vacancies['items']if vacancy['salary']]
+        [predict_rub_salary_hh(vacancy) for vacancy in vacancies['items'] if vacancy['salary']]
         ))
 
         if not salaries:
@@ -128,7 +129,7 @@ def get_vacancies_summary_sj(languages, token):
     
     for language, vacancies in all_vacancies.items():
         salaries = tuple(filter(lambda x: x, 
-        [predict_rub_salary(vacancy, False) for vacancy in vacancies['objects']]
+        [predict_rub_salary_sj(vacancy) for vacancy in vacancies['objects']]
         ))      
 
         if not salaries:
